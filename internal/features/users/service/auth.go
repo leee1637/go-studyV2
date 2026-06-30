@@ -26,17 +26,7 @@ func NewAuthService(repo *repository_postgres.UserRepository, secretKey string) 
 	}
 }
 
-type SignUpDTO struct {
-	ID          int
-	Login       string
-	Password    string
-	Role        domain.Role
-	FIO         string
-	GroupName   []string
-	PhoneNumber *string
-}
-
-func (s *AuthService) SignUp(ctx context.Context, user SignUpDTO) error {
+func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 
 	_, err := s.repo.GetByLogin(ctx, user.Login)
 
@@ -109,6 +99,9 @@ func (s *AuthService) SignUp(ctx context.Context, user SignUpDTO) error {
 		}
 
 		err = s.repo.SaveUserStudent(ctx, tx, &newStudent)
+		if len(newStudent.GroupName) > 1 {
+			return fmt.Errorf("Нельзя выбрать больше одной группы")
+		}
 		if err != nil {
 			return fmt.Errorf("ошибка сохранения профиля студента: %w", err)
 		}

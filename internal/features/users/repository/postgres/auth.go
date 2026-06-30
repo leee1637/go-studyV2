@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"study/internal/core/domain"
-	"study/internal/features/users/service"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -77,20 +76,20 @@ func (u *UserRepository) SaveUserAdmin(ctx context.Context, tx pgx.Tx, user *dom
 	return err
 }
 
-func (u *UserRepository) GetByLogin(ctx context.Context, login string) (service.SignUpDTO, error) {
+func (u *UserRepository) GetByLogin(ctx context.Context, login string) (domain.SignUpDTO, error) {
 	if login == "" {
-		return service.SignUpDTO{}, fmt.Errorf("Login can`t be empity")
+		return domain.SignUpDTO{}, fmt.Errorf("Login can`t be empity")
 	}
 	query := `SELECT id, login, password, role FROM users WHERE login = $1`
-	var user service.SignUpDTO
+	var user domain.SignUpDTO
 
 	err := u.pool.QueryRow(ctx, query, login).Scan(&user.ID, &user.Login, &user.Password, &user.Role)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return service.SignUpDTO{}, fmt.Errorf("user with login %s not found", login)
+			return domain.SignUpDTO{}, fmt.Errorf("user with login %s not found. err: %w", login, pgx.ErrNoRows)
 		}
-		return service.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
+		return domain.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	return user, nil

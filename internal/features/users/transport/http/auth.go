@@ -3,7 +3,6 @@ package http_transport
 import (
 	"net/http"
 	"study/internal/core/domain"
-	"study/internal/features/users/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +30,7 @@ func (a *AuthHandler) SignUp(g *gin.Context) {
 		return
 	}
 
-	dto := service.SignUpDTO{
+	dto := domain.SignUpDTO{
 		Login:       input.Login,
 		Password:    input.Password,
 		Role:        input.Role,

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	_ "study/internal/features/users/repository/postgres"
 	repository_postgres "study/internal/features/users/repository/postgres"
 	"study/internal/features/users/service"
 	http_transport "study/internal/features/users/transport/http"
