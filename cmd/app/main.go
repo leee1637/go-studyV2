@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"study/internal/features/users/repository/postgres"
+	_ "study/internal/features/users/repository/postgres"
+	repository_postgres "study/internal/features/users/repository/postgres"
 	"study/internal/features/users/service"
 	http_transport "study/internal/features/users/transport/http"
 	"study/internal/features/users/transport/middleware"
@@ -21,9 +22,9 @@ func main() {
 		log.Fatal("❌ Ошибка загрузки .env:", err)
 	}
 
-	dsn := "postgres://test:123@127.0.0.1:5432/test_db?sslmode=disable"
+	dsn := os.Getenv("DSN")
 	if dsn == "" {
-		log.Fatal("❌ DSN не найден в .env")
+		dsn = "postgres://test:123@127.0.0.1:5433/test_db?sslmode=disable"
 	}
 	fmt.Println("DEBUG DSN:", dsn)
 
@@ -47,7 +48,7 @@ func main() {
 		log.Fatal("❌ SECRET_KEY не найден в .env")
 	}
 
-	repo := postgres.NewUserRepository(dbPool)
+	repo := repository_postgres.NewUserRepository(dbPool)
 	service := service.NewAuthService(repo, secretKey)
 	hand := http_transport.NewAuthHandler(service)
 

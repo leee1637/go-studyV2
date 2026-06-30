@@ -3,14 +3,18 @@ package http_transport
 import (
 	"net/http"
 	"study/internal/core/domain"
+	"study/internal/features/users/service"
 
 	"github.com/gin-gonic/gin"
 )
 
 type SignUpInput struct {
-	Login    string      `json:"login" binding:"required"`
-	Password string      `json:"password" binding:"required"`
-	Role     domain.Role `json:"role" binding:"required"`
+	Login       string      `json:"login" binding:"required"`
+	Password    string      `json:"password" binding:"required"`
+	Role        domain.Role `json:"role" binding:"required"`
+	FIO         string      `json:"fio" binding:"required"` // Добавили ФИО
+	GroupName   []string    `json:"group_name"`             // Массив групп (опционально, для преподов/студентов)
+	PhoneNumber *string     `json:"phone_number"`           // Указатель, так как поле может быть null
 }
 
 type SignInInput struct {
@@ -27,9 +31,18 @@ func (a *AuthHandler) SignUp(g *gin.Context) {
 		return
 	}
 
-	err = a.authService.SignUp(g.Request.Context(), input.Login, input.Password, input.Role)
+	dto := service.SignUpDTO{
+		Login:       input.Login,
+		Password:    input.Password,
+		Role:        input.Role,
+		FIO:         input.FIO,
+		GroupName:   input.GroupName,
+		PhoneNumber: input.PhoneNumber,
+	}
+
+	err = a.authService.SignUp(g.Request.Context(), dto)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		g.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

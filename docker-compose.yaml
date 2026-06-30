@@ -4,17 +4,39 @@ services:
     container_name: study-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./out/pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   study-postgres-migrate:
     image: migrate/migrate:v4.19.1
     volumes:
       - ./migrations:/migrations
-    command: -path /migrations -database "postgres://test:123@study-postgres:5432/test_db?sslmode=disable" up
+    command: -path /migrations -database "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@study-postgres:5432/${POSTGRES_DB}?sslmode=disable" up
     restart: "no"
+    depends_on:
+      study-postgres:
+        condition: service_healthy
+
+  study-app:
+    build: .
+    container_name: study-app
+    environment:
+      DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@study-postgres:5432/${POSTGRES_DB}?sslmode=disable
+      SECRET_KEY: ${SECRET_KEY}
+    ports:
+      - "8080:8081"
+    restart: always
+    depends_on:
+      study-postgres-migrate:
+        condition: service_completed_successfully

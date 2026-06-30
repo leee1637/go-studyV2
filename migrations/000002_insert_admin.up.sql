@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS admins (
+    id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    fio VARCHAR(300) NOT NULL,
+    phone_number VARCHAR(50)
+);
