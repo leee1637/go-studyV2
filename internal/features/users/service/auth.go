@@ -99,9 +99,7 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 		}
 
 		err = s.repo.SaveUserStudent(ctx, tx, &newStudent)
-		if len(newStudent.GroupName) > 1 {
-			return fmt.Errorf("Нельзя выбрать больше одной группы")
-		}
+
 		if err != nil {
 			return fmt.Errorf("ошибка сохранения профиля студента: %w", err)
 		}

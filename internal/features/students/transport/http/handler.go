@@ -6,8 +6,8 @@ type StudentHandler struct {
 	StudentService *student_service.StudentService
 }
 
-func NewAuthService(s student_service.StudentService) *StudentHandler {
+func NewStudentHandler(s *student_service.StudentService) *StudentHandler {
 	return &StudentHandler{
-		StudentService: &s,
+		StudentService: s,
 	}
 }

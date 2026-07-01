@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	students_postgres_repository "study/internal/features/students/repository/postgres"
+	student_service "study/internal/features/students/service"
+	http_student "study/internal/features/students/transport/http"
 	repository_postgres "study/internal/features/users/repository/postgres"
 	"study/internal/features/users/service"
 	http_transport "study/internal/features/users/transport/http"
@@ -18,25 +21,25 @@ import (
 func main() {
 
 	if err := godotenv.Load("../../.env"); err != nil {
-		log.Fatal("❌ Ошибка загрузки .env:", err)
+		log.Fatal("Ошибка загрузки .env:", err)
 	}
 
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
-		dsn = "postgres://test:123@127.0.0.1:5433/test_db?sslmode=disable"
+		dsn = "postgres://test:123@127.0.0.1:5534/test_db?sslmode=disable"
 	}
 	fmt.Println("DEBUG DSN:", dsn)
 
 	dbPool, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
-		log.Fatal("❌ Ошибка создания пула подключений:", err)
+		log.Fatal("Ошибка создания пула подключений:", err)
 	}
 	defer dbPool.Close()
 
 	if err := dbPool.Ping(context.Background()); err != nil {
-		log.Fatal("❌ БД не отвечает:", err)
+		log.Fatal("БД не отвечает:", err)
 	}
-	fmt.Println("✅ Подключено к БД!")
+	fmt.Println("Подключено к БД!")
 
 	fmt.Println("hi")
 
@@ -44,16 +47,19 @@ func main() {
 
 	secretKey := os.Getenv("SECRET_KEY")
 	if secretKey == "" {
-		log.Fatal("❌ SECRET_KEY не найден в .env")
+		log.Fatal("SECRET_KEY не найден в .env")
 	}
 
 	repo := repository_postgres.NewUserRepository(dbPool)
 	service := service.NewAuthService(repo, secretKey)
 	hand := http_transport.NewAuthHandler(service)
 
+	studentRepo := students_postgres_repository.NewUserRepository(dbPool)
+	studentService := student_service.NewStudentService(studentRepo, secretKey)
+	studentHand := http_student.NewStudentHandler(studentService)
+
 	r.POST("/register", hand.SignUp)
 	r.POST("/login", hand.SignIn)
-	r.POST("/api/student")
 
 	api := r.Group("/api")
 
@@ -67,8 +73,13 @@ func main() {
 		api.GET("/groups", middleware.RequireRole("ADMIN", "TEACHER"), func(c *gin.Context) {
 
 		})
+
+		students := api.Group("/students")
+		{
+			students.GET("", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.GetAll)
+
+		}
+
 	}
-
-	r.Run(":8081")
-
+	r.Run(":8091")
 }

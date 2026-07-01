@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"study/internal/core/domain"
-	students_postgres_repository "study/internal/features/students/repository/student"
+	students_postgres_repository "study/internal/features/students/repository/postgres"
 )
 
 type StudentService struct {
@@ -12,15 +12,15 @@ type StudentService struct {
 	secretKey []byte
 }
 
-func NewAuthService(repo *students_postgres_repository.UserRepository, secretKey string) *AuthService {
+func NewStudentService(repo *students_postgres_repository.UserRepository, secretKey string) *StudentService {
 	return &StudentService{
 		repo:      repo,
 		secretKey: []byte(secretKey),
 	}
 }
 
-func (s *StudentService) GetAll(ctx context.Context, pag domain.PaginationRequest) (*PageResulte, error) {
-	n := domain.NewPaginationRequest(pag.Page, pag.PageSize)
+func (s *StudentService) GetAll(ctx context.Context, page, limit int) (*domain.PageResult, error) {
+	n := domain.NewPaginationRequest(page, limit)
 
 	request, err := s.repo.GetAll(ctx, n)
 

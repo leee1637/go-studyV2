@@ -25,7 +25,7 @@ func (s *StudentHandler) GetAll(g *gin.Context) {
 		limit = 20
 	}
 
-	result, err := s.StudentService.GetAll(g, page, limit)
+	result, err := s.StudentService.GetAll(g.Request.Context(), page, limit)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

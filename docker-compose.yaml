@@ -9,7 +9,7 @@ services:
     volumes:
       - ./out/pgdata:/var/lib/postgresql/data
     ports:
-      - "5433:5432"
+      - "5534:5432"
     restart: always
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -27,16 +27,3 @@ services:
     depends_on:
       study-postgres:
         condition: service_healthy
-
-  study-app:
-    build: .
-    container_name: study-app
-    environment:
-      DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@study-postgres:5432/${POSTGRES_DB}?sslmode=disable
-      SECRET_KEY: ${SECRET_KEY}
-    ports:
-      - "8080:8081"
-    restart: always
-    depends_on:
-      study-postgres-migrate:
-        condition: service_completed_successfully

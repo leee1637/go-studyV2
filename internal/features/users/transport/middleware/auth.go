@@ -14,6 +14,7 @@ func AuthMiddleware(secretKey string) gin.HandlerFunc {
 
 		if au == "" {
 			g.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Отсутствует заголовок Authorization"})
+			return
 		}
 
 		parts := strings.Split(au, " ")
@@ -40,7 +41,7 @@ func AuthMiddleware(secretKey string) gin.HandlerFunc {
 			return
 		}
 
-		g.Set("userID", int(claims["sub"].(float64)))
+		g.Set("userID", int(claims["user_id"].(float64)))
 		g.Set("role", claims["role"].(string))
 
 		g.Next()
