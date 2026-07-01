@@ -53,6 +53,7 @@ func main() {
 
 	r.POST("/register", hand.SignUp)
 	r.POST("/login", hand.SignIn)
+	r.POST("/api/student")
 
 	api := r.Group("/api")
 

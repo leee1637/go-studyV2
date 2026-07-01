@@ -11,9 +11,9 @@ type SignUpInput struct {
 	Login       string      `json:"login" binding:"required"`
 	Password    string      `json:"password" binding:"required"`
 	Role        domain.Role `json:"role" binding:"required"`
-	FIO         string      `json:"fio" binding:"required"` // Добавили ФИО
-	GroupName   []string    `json:"group_name"`             // Массив групп (опционально, для преподов/студентов)
-	PhoneNumber *string     `json:"phone_number"`           // Указатель, так как поле может быть null
+	FIO         string      `json:"fio" binding:"required"`
+	GroupName   []string    `json:"group_name"`
+	PhoneNumber *string     `json:"phone_number"`
 }
 
 type SignInInput struct {
