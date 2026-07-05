@@ -98,8 +98,7 @@ func (u *StudentRepository) GetByGroup(ctx context.Context, group string) ([]dom
 }
 
 func (u *StudentRepository) UpdateStudent(ctx context.Context, s domain.Student) error {
-	query := `INSERT INTO students (id, fio, group_name, phone_number)
-	VALUES ($1, $2, $3, $4)`
+	query := ` UPDATE students SET fio=$2, group_name=$3, phone_number=$4 WHERE id=$1`
 
 	row, err := u.pool.Exec(ctx, query, s.ID, s.FIO, s.GroupName, s.PhoneNumber)
 	if err != nil {
@@ -145,7 +144,7 @@ func (u *StudentRepository) IsStudentInTeacherGroup(ctx context.Context, teacher
 func (u *StudentRepository) IsTeacherOfGroup(ctx context.Context, teacherID int, gr string) (bool, error) {
 	query := `SELECT EXISTS (
 	SELECT 1 FROM teachers_group tg
-	WHERE teachers_id = $1 AND group_name = $2`
+	WHERE teacher_id = $1 AND group_name = $2)`
 
 	var exists bool
 	err := u.pool.QueryRow(ctx, query, teacherID, gr).Scan(&exists)

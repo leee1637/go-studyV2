@@ -75,8 +75,11 @@ func (s *StudentService) GetByIDStudent(ctx context.Context, idRequest int, role
 
 }
 
-func (s *StudentService) UpdateStudent(ctx context.Context, req int, role domain.Role, out int) error {
+func (s *StudentService) UpdateStudent(ctx context.Context, req int, role domain.Role, out int, outStud domain.UpdateStudentDTO) error {
 	ds, err := s.repo.GetByID(ctx, out)
+	ds.FIO = outStud.FIO
+	ds.GroupName = outStud.GroupName
+	ds.PhoneNumber = outStud.PhoneNumber
 	if err != nil {
 		return fmt.Errorf("Ошибка при получении студентна: %w", err)
 	}
@@ -170,7 +173,7 @@ func (s *StudentService) GetByGroup(ctx context.Context, idReq int, role domain.
 	}
 }
 
-func (s *StudentService) DeleteStudent(ctx context.Context, idReq int, role domain.Role, group string, idDel int) error {
+func (s *StudentService) DeleteStudent(ctx context.Context, idReq int, role domain.Role, idDel int) error {
 	switch role {
 	case domain.RoleAdmin:
 		err := s.repo.DeleteStudent(ctx, idDel)
@@ -182,15 +185,16 @@ func (s *StudentService) DeleteStudent(ctx context.Context, idReq int, role doma
 	case domain.RoleTeacher:
 		slGroup, err := s.repo.IsStudentInTeacherGroup(ctx, idReq, idDel)
 		if err != nil {
-			fmt.Errorf("Ошибка запроса учителя к группе: %w", err)
+			return fmt.Errorf("Ошибка запроса учителя к группе: %w", err)
+
 		}
 		if slGroup != true {
-			fmt.Errorf("Студент не состоит в группе запроса от учителя")
+			return fmt.Errorf("Студент не состоит в группе запроса от учителя")
 		}
 
 		err = s.repo.DeleteStudent(ctx, idDel)
 		if err != nil {
-			fmt.Errorf("Ошибка при удалении студентна: %w", err)
+			return fmt.Errorf("Ошибка при удалении студентна: %w", err)
 		}
 
 		return nil

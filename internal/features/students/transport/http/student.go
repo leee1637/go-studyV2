@@ -96,7 +96,13 @@ func (s *StudentHandler) UpdateStudent(g *gin.Context) {
 		return
 	}
 
-	err = s.StudentService.UpdateStudent(g.Request.Context(), requestID.(int), domain.Role(role.(string)), studentID)
+	var input domain.UpdateStudentDTO
+	if err := g.ShouldBindJSON(&input); err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
+		return
+	}
+
+	err = s.StudentService.UpdateStudent(g.Request.Context(), requestID.(int), domain.Role(role.(string)), studentID, input)
 	if err != nil {
 		g.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
