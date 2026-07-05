@@ -18,5 +18,5 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 }
 
 func (u *UserRepository) Begin(ctx context.Context) (pgx.Tx, error) {
-	return u.pool.Begin(ctx) // u.pool — это твой *pgxpool.Pool внутри репозитория
+	return u.pool.Begin(ctx)
 }

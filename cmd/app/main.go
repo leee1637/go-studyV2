@@ -77,6 +77,10 @@ func main() {
 		students := api.Group("/students")
 		{
 			students.GET("", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.GetAll)
+			students.GET("/:id", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.GetByID)
+			students.GET("/:group", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.GetByGroup)
+			students.DELETE("/:id", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.DeleteStudent)
+			students.PATCH("/:id", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.UpdateStudent)
 
 		}
 

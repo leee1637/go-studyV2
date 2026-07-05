@@ -94,3 +94,22 @@ func (u *UserRepository) GetByLogin(ctx context.Context, login string) (domain.S
 
 	return user, nil
 }
+
+func (u *UserRepository) GetByID(ctx context.Context, id int) (domain.SignUpDTO, error) {
+	if id < 0 {
+		return domain.SignUpDTO{}, fmt.Errorf("iid меньше нуля")
+	}
+	query := `SELECT id, login, password, role FROM users WHERE id = $1`
+	var user domain.SignUpDTO
+
+	err := u.pool.QueryRow(ctx, query, id).Scan(&user.ID, &user.Login, &user.Password, &user.Role)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.SignUpDTO{}, fmt.Errorf("user with login %s not found. err: %w", id, pgx.ErrNoRows)
+		}
+		return domain.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	return user, nil
+}

@@ -7,16 +7,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type UserRepository struct {
+type StudentRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
-	return &UserRepository{
+func NewUserRepository(pool *pgxpool.Pool) *StudentRepository {
+	return &StudentRepository{
 		pool: pool,
 	}
 }
 
-func (u *UserRepository) Begin(ctx context.Context) (pgx.Tx, error) {
+func (u *StudentRepository) Begin(ctx context.Context) (pgx.Tx, error) {
 	return u.pool.Begin(ctx) // u.pool — это твой *pgxpool.Pool внутри репозитория
 }
