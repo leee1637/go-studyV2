@@ -83,6 +83,16 @@ func main() {
 			students.PATCH("/:id", middleware.RequireRole("ADMIN", "TEACHER", "STUDENT"), studentHand.UpdateStudent)
 
 		}
+		teachers := api.Group("/teachers")
+		{
+			teachers.GET("", middleware.RequireRole("ADMIN"))
+			teachers.GET("/:id", middleware.RequireRole("ADMIN", "TEACHER"))
+			teachers.PATCH("/:id", middleware.RequireRole("ADMIN", "TEACHER"))
+			teachers.DELETE("/:id", middleware.RequireRole("ADMIN"))
+			teachers.GET("/:id/group", middleware.RequireRole("ADMIN", "TEACHER"))
+			teachers.POST("/:id/group", middleware.RequireRole("ADMIN"))
+			teachers.DELETE("/:id/group/:group", middleware.RequireRole("ADMIN"))
+		}
 
 	}
 	r.Run(":8091")

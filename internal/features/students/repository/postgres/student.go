@@ -63,7 +63,7 @@ func (u *StudentRepository) GetByID(ctx context.Context, id int) (domain.Student
 
 	err := u.pool.QueryRow(ctx, query, id).Scan(&s.ID, &s.FIO, &s.GroupName, &s.PhoneNumber)
 	if err != nil {
-		return domain.Student{}, fmt.Errorf("Ошибка запроста студента в бд", err)
+		return domain.Student{}, fmt.Errorf("Ошибка запроста студента в бд %w", err)
 	}
 
 	return s, nil
@@ -98,7 +98,7 @@ func (u *StudentRepository) GetByGroup(ctx context.Context, group string) ([]dom
 }
 
 func (u *StudentRepository) UpdateStudent(ctx context.Context, s domain.Student) error {
-	query := ` UPDATE students SET fio=$2, group_name=$3, phone_number=$4 WHERE id=$1`
+	query := `UPDATE students SET fio=$2, group_name=$3, phone_number=$4 WHERE id=$1`
 
 	row, err := u.pool.Exec(ctx, query, s.ID, s.FIO, s.GroupName, s.PhoneNumber)
 	if err != nil {

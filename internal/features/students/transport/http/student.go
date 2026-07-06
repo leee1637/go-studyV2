@@ -66,8 +66,8 @@ func (s *StudentHandler) GetByGroup(g *gin.Context) {
 
 	role, _ := g.Get("role")
 
-	group, err := strconv.Atoi(g.Param("group"))
-	if err != nil {
+	group := g.Param("group")
+	if group == "" {
 		g.JSON(http.StatusBadRequest, gin.H{"error": "ошибка парса параметра group"})
 		return
 	}
