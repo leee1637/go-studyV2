@@ -77,12 +77,14 @@ func (s *StudentService) GetByIDStudent(ctx context.Context, idRequest int, role
 
 func (s *StudentService) UpdateStudent(ctx context.Context, req int, role domain.Role, out int, outStud domain.UpdateStudentDTO) error {
 	ds, err := s.repo.GetByID(ctx, out)
-	ds.FIO = outStud.FIO
-	ds.GroupName = outStud.GroupName
-	ds.PhoneNumber = outStud.PhoneNumber
+
 	if err != nil {
 		return fmt.Errorf("Ошибка при получении студентна: %w", err)
 	}
+
+	ds.FIO = outStud.FIO
+	ds.GroupName = outStud.GroupName
+	ds.PhoneNumber = outStud.PhoneNumber
 	switch role {
 	case domain.RoleAdmin:
 		err := s.repo.UpdateStudent(ctx, ds)

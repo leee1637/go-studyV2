@@ -98,7 +98,7 @@ func main() {
 			teachers.DELETE("/:id", middleware.RequireRole("ADMIN"), teacherHand.DeleteTeacher)
 			teachers.GET("/group/:group", middleware.RequireRole("ADMIN", "TEACHER"), teacherHand.GetByGroup)
 			teachers.POST("/:id/group/:group", middleware.RequireRole("ADMIN"), teacherHand.AddGroup)
-			teachers.DELETE("/group/:group", middleware.RequireRole("ADMIN"), teacherHand.DeleteGroup)
+			teachers.DELETE("/:id/group/:group", middleware.RequireRole("ADMIN"), teacherHand.DeleteGroup)
 		}
 
 	}

@@ -160,13 +160,13 @@ func (t *TeacherRepository) AddGroup(ctx context.Context, id int, group string) 
 	return nil
 }
 
-func (t *TeacherRepository) DeleteGroup(ctx context.Context, group string) error {
+func (t *TeacherRepository) DeleteGroup(ctx context.Context, id int, group string) error {
 	if group == "" {
 		return fmt.Errorf("ошибка - группа пустая")
 	}
-	query := `DELETE FROM teachers_group WHERE group_name = $1`
+	query := `DELETE FROM teachers_group WHERE teacher_id = $1 AND group_name = $2`
 
-	row, err := t.pool.Exec(ctx, query, group)
+	row, err := t.pool.Exec(ctx, query, id, group)
 	if err != nil {
 		return fmt.Errorf("Ошибка запроса: %w", err)
 	}

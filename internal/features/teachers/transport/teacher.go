@@ -164,7 +164,7 @@ func (t *TeacherHandler) AddGroup(g *gin.Context) {
 }
 
 func (t *TeacherHandler) DeleteGroup(g *gin.Context) {
-	_, exists := g.Get("userID")
+	id, exists := g.Get("userID")
 	if !exists {
 		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
 		return

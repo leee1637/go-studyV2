@@ -15,3 +15,8 @@ type UpdateStudentDTO struct {
 	GroupName   string  `json:"group"`
 	PhoneNumber *string `json:"phone_number"`
 }
+
+type UpdateTeachertDTO struct {
+	FIO         string  `json:"fio"`
+	PhoneNumber *string `json:"phone_number"`
+}
