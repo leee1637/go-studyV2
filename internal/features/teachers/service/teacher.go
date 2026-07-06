@@ -41,7 +41,7 @@ func (s *TeacherService) GetByID(ctx context.Context, idReq, idResp int, role do
 		return s, nil
 
 	case domain.RoleTeacher:
-		if idReq == idResp {
+		if idReq != idResp {
 			return domain.Teacher{}, fmt.Errorf("Учитель может смотреть только себя")
 		}
 
@@ -75,7 +75,7 @@ func (s *TeacherService) UpdateTeacher(ctx context.Context, idReq, idResp int, r
 		return nil
 
 	case domain.RoleTeacher:
-		if idReq == idResp {
+		if idReq != idResp {
 			return fmt.Errorf("Пользователя вызывает не сам себя!")
 		}
 
@@ -104,12 +104,12 @@ func (s *TeacherService) DeleteTeacher(ctx context.Context, idReq, idResp int, r
 	}
 }
 
-func (s *TeacherService) GetByGroup(ctx context.Context, idReq int, group string, role domain.Role) (domain.Teacher, error) {
+func (s *TeacherService) GetByGroup(ctx context.Context, idReq int, group string, role domain.Role) ([]domain.Teacher, error) {
 	switch role {
 	case domain.RoleAdmin:
 		tec, err := s.repo.GetByGroup(ctx, group)
 		if err != nil {
-			return domain.Teacher{}, fmt.Errorf("Ошибка запроса: %w", err)
+			return nil, fmt.Errorf("Ошибка запроса: %w", err)
 		}
 
 		return tec, nil
@@ -117,20 +117,20 @@ func (s *TeacherService) GetByGroup(ctx context.Context, idReq int, group string
 	case domain.RoleTeacher:
 		tec, err := s.repo.GetByID(ctx, idReq)
 		if err != nil {
-			return domain.Teacher{}, fmt.Errorf("Ошибка поулчения препрда Id: %w", err)
+			return nil, fmt.Errorf("Ошибка поулчения препрда Id: %w", err)
 		}
 		for _, v := range tec.GroupName {
 			if v == group {
 				tecZ, err := s.repo.GetByGroup(ctx, group)
 				if err != nil {
-					return domain.Teacher{}, fmt.Errorf("Ошибка запроса к группе: %w", err)
+					return nil, fmt.Errorf("Ошибка запроса к группе: %w", err)
 				}
 				return tecZ, nil
 			}
 		}
-		return domain.Teacher{}, fmt.Errorf("Группа не преподователя")
+		return nil, fmt.Errorf("Группа не преподователя")
 	default:
-		return domain.Teacher{}, fmt.Errorf("Ошибка получения роли")
+		return nil, fmt.Errorf("Ошибка получения роли")
 	}
 }
 

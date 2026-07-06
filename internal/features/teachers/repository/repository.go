@@ -6,7 +6,7 @@ type TeacherRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewUserRepository(pool *pgxpool.Pool) *TeacherRepository {
+func NewTeacherRepository(pool *pgxpool.Pool) *TeacherRepository {
 	return &TeacherRepository{
 		pool: pool,
 	}

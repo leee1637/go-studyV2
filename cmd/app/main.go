@@ -8,6 +8,9 @@ import (
 	students_postgres_repository "study/internal/features/students/repository/postgres"
 	student_service "study/internal/features/students/service"
 	http_student "study/internal/features/students/transport/http"
+	repository_teacher "study/internal/features/teachers/repository"
+	service_teacher "study/internal/features/teachers/service"
+	transport_teacher "study/internal/features/teachers/transport"
 	repository_postgres "study/internal/features/users/repository/postgres"
 	"study/internal/features/users/service"
 	http_transport "study/internal/features/users/transport/http"
@@ -58,6 +61,10 @@ func main() {
 	studentService := student_service.NewStudentService(studentRepo, secretKey)
 	studentHand := http_student.NewStudentHandler(studentService)
 
+	teacherRepo := repository_teacher.NewTeacherRepository(dbPool)
+	teacherService := service_teacher.NewTeacherService(teacherRepo, secretKey)
+	teacherHand := transport_teacher.NewTeacherHandler(teacherService)
+
 	r.POST("/register", hand.SignUp)
 	r.POST("/login", hand.SignIn)
 
@@ -85,13 +92,13 @@ func main() {
 		}
 		teachers := api.Group("/teachers")
 		{
-			teachers.GET("", middleware.RequireRole("ADMIN"))
-			teachers.GET("/:id", middleware.RequireRole("ADMIN", "TEACHER"))
-			teachers.PATCH("/:id", middleware.RequireRole("ADMIN", "TEACHER"))
-			teachers.DELETE("/:id", middleware.RequireRole("ADMIN"))
-			teachers.GET("/:id/group", middleware.RequireRole("ADMIN", "TEACHER"))
-			teachers.POST("/:id/group", middleware.RequireRole("ADMIN"))
-			teachers.DELETE("/:id/group/:group", middleware.RequireRole("ADMIN"))
+			teachers.GET("", middleware.RequireRole("ADMIN"), teacherHand.GetAll)
+			teachers.GET("/:id", middleware.RequireRole("ADMIN", "TEACHER"), teacherHand.GetByID)
+			teachers.PATCH("/:id", middleware.RequireRole("ADMIN", "TEACHER"), teacherHand.UpdateTeacher)
+			teachers.DELETE("/:id", middleware.RequireRole("ADMIN"), teacherHand.DeleteTeacher)
+			teachers.GET("/group/:group", middleware.RequireRole("ADMIN", "TEACHER"), teacherHand.GetByGroup)
+			teachers.POST("/:id/group/:group", middleware.RequireRole("ADMIN"), teacherHand.AddGroup)
+			teachers.DELETE("/group/:group", middleware.RequireRole("ADMIN"), teacherHand.DeleteGroup)
 		}
 
 	}

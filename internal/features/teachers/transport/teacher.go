@@ -134,7 +134,7 @@ func (t *TeacherHandler) GetByGroup(g *gin.Context) {
 }
 
 func (t *TeacherHandler) AddGroup(g *gin.Context) {
-	idReq, exists := g.Get("userID")
+	_, exists := g.Get("userID")
 	if !exists {
 		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
 		return
@@ -142,13 +142,19 @@ func (t *TeacherHandler) AddGroup(g *gin.Context) {
 
 	role, _ := g.Get("role")
 
+	teacherID, err := strconv.Atoi(g.Param("id"))
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "Неверный id"})
+		return
+	}
+
 	teacherGroup := g.Param("group")
 	if teacherGroup == "" {
 		g.JSON(http.StatusBadRequest, gin.H{"error": "Не задан group"})
 		return
 	}
 
-	err := t.TeacherService.AddGroup(g.Request.Context(), idReq.(int), teacherGroup, domain.Role(role.(string)))
+	err = t.TeacherService.AddGroup(g.Request.Context(), teacherID, teacherGroup, domain.Role(role.(string)))
 	if err != nil {
 		g.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
