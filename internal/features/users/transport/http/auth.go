@@ -21,6 +21,10 @@ type SignInInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type RefreshInput struct {
+	RefreshInput string `json:"refresh_token"`
+}
+
 func (a *AuthHandler) SignUp(g *gin.Context) {
 	var input SignUpInput
 
@@ -57,12 +61,50 @@ func (a *AuthHandler) SignIn(g *gin.Context) {
 		return
 	}
 
-	token, err := a.authService.SignIn(g.Request.Context(), input.Login, input.Password)
+	fastToken, refreshToken, err := a.authService.SignIn(g.Request.Context(), input.Login, input.Password)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	g.JSON(http.StatusOK, gin.H{"token": token})
+	g.JSON(http.StatusOK, gin.H{"fast_token": fastToken,
+		"refresh_token": refreshToken})
 
+}
+
+func (a *AuthHandler) Refresh(g *gin.Context) {
+	var r RefreshInput
+
+	err := g.ShouldBindJSON(&r)
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "Нету refresh_token - обязательно"})
+		return
+	}
+
+	fastToken, refreshToken, err := a.authService.Refresh(g.Request.Context(), r.RefreshInput)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка парса токенов"})
+		return
+	}
+
+	g.JSON(http.StatusOK, gin.H{
+		"access_token":  fastToken,
+		"refresh_token": refreshToken,
+	})
+}
+
+func (a *AuthHandler) Logout(g *gin.Context) {
+	var input RefreshInput
+	if err := g.ShouldBindJSON(&input); err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "refresh_token обязателен"})
+		return
+	}
+
+	err := a.authService.Logout(g.Request.Context(), input.RefreshInput)
+	if err != nil {
+		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	g.JSON(http.StatusOK, gin.H{"message": "Успешный выход"})
 }

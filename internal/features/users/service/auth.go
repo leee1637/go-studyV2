@@ -139,32 +139,126 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 	return nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, login, password string) (string, error) {
+func (s *AuthService) SignIn(ctx context.Context, login, password string) (string, string, error) {
 	// 1. Найти пользователя по логину через репозиторий
 	user, err := s.repo.GetByLogin(ctx, login)
 	if err != nil {
-		return "", errors.New("Неверный логин")
+		return "", "", errors.New("Неверный логин")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 
 	if err != nil {
-		return "", fmt.Errorf("Неверный пароль: %w", err)
+		return "", "", fmt.Errorf("Неверный пароль: %w", err)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	fastToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
 		"login":   user.Login,
 		"role":    user.Role,
+		"type":    "fast",
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // 24 часа
 		"iat":     time.Now().Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(s.secretKey))
+	fastString, err := fastToken.SignedString([]byte(s.secretKey))
 	if err != nil {
-		return "", fmt.Errorf("Не удаётся сгенерировать токен: %w", err)
+		return "", "", fmt.Errorf("Не удаётся сгенерировать токен: %w", err)
 	}
 
-	return tokenString, nil
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"type":    "refresh",
+		"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	})
 
+	refreshString, err := refreshToken.SignedString([]byte(s.secretKey))
+	if err != nil {
+		return "", "", fmt.Errorf("Не удаётся сгенерировать токен: %w", err)
+	}
+
+	err = s.repo.SaveRefreshTokenNoTX(ctx, user.ID, refreshString, time.Now().Add(time.Hour*30*24))
+	if err != nil {
+		return "", "", fmt.Errorf("Ошибка сохранения refresh token: %w", err)
+	}
+
+	return fastString, refreshString, nil
+
+}
+
+func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (string, string, error) {
+	token, err := jwt.Parse(refreshToken, func(t *jwt.Token) (interface{}, error) {
+		return []byte(s.secretKey), nil
+	})
+	if err != nil || !token.Valid {
+		return "", "", errors.New("Невалидный refresh token")
+	}
+
+	claims := token.Claims.(jwt.MapClaims)
+	if claims["type"] != "refresh" {
+		return "", "", errors.New("Это не refresh token")
+	}
+
+	userID := int(claims["user_id"].(float64))
+
+	tx, err := s.repo.Begin(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("не удалось начать транзакцию: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	_, err = s.repo.GetRefreshToken(ctx, tx, refreshToken)
+	if err != nil {
+		return "", "", fmt.Errorf("refresh token не найден: %w", err)
+	}
+
+	err = s.repo.DeleteRefreshToken(ctx, tx, refreshToken)
+	if err != nil {
+		return "", "", fmt.Errorf("ошибка удаления: %w", err)
+	}
+
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		return "", "", fmt.Errorf("пользователь не найден: %w", err)
+	}
+
+	fastAccess := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"login":   user.Login,
+		"role":    user.Role,
+		"type":    "fast",
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	})
+
+	fastString, err := fastAccess.SignedString([]byte(s.secretKey))
+	if err != nil {
+		return "", "", fmt.Errorf("Ошибка генерации fast token: %w", err)
+	}
+
+	newRefresh := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id": user.ID,
+		"type":    "refresh",
+		"exp":     time.Now().Add(30 * 24 * time.Hour).Unix(),
+		"iat":     time.Now().Unix(),
+	})
+	refreshString, err := newRefresh.SignedString([]byte(s.secretKey))
+	if err != nil {
+		return "", "", fmt.Errorf("Ошибка генерации refresh token: %w", err)
+	}
+
+	err = s.repo.SaveRefreshToken(ctx, tx, user.ID, refreshString, time.Now().Add(time.Hour*24*30))
+	if err != nil {
+		return "", "", fmt.Errorf("Ошибка сохранения токена: %w", err)
+	}
+	return fastString, refreshString, nil
+}
+
+func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	return s.repo.DeleteRefreshTokenNoTX(ctx, refreshToken)
 }

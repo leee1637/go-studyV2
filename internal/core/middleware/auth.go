@@ -41,6 +41,12 @@ func AuthMiddleware(secretKey string) gin.HandlerFunc {
 			return
 		}
 
+		tokenType, ok := claims["type"].(string)
+		if !ok || tokenType != "fast" {
+			g.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Используйте access token"})
+			return
+		}
+
 		g.Set("userID", int(claims["user_id"].(float64)))
 		g.Set("role", claims["role"].(string))
 

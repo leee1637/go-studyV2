@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"study/internal/core/middleware"
 	students_postgres_repository "study/internal/features/students/repository/postgres"
 	student_service "study/internal/features/students/service"
 	http_student "study/internal/features/students/transport/http"
@@ -14,7 +15,6 @@ import (
 	repository_postgres "study/internal/features/users/repository/postgres"
 	"study/internal/features/users/service"
 	http_transport "study/internal/features/users/transport/http"
-	"study/internal/features/users/transport/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -65,8 +65,10 @@ func main() {
 	teacherService := service_teacher.NewTeacherService(teacherRepo, secretKey)
 	teacherHand := transport_teacher.NewTeacherHandler(teacherService)
 
-	r.POST("/register", hand.SignUp)
-	r.POST("/login", hand.SignIn)
+	r.POST("/api/auth/register", hand.SignUp)
+	r.POST("/api/auth/login", hand.SignIn)
+	r.POST("/api/auth/refresh", hand.Refresh)
+	r.POST("/api/auth/logout", hand.Logout)
 
 	api := r.Group("/api")
 

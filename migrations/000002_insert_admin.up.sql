@@ -3,3 +3,11 @@ CREATE TABLE IF NOT EXISTS admins (
     fio VARCHAR(300) NOT NULL,
     phone_number VARCHAR(50)
 );
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INT PRIMARY KEY,
+    id_users INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(500) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP DEFAULT NOW()
+);
