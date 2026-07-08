@@ -14,7 +14,7 @@ func (u *UserRepository) SaveVerificationToken(ctx context.Context, tx pgx.Tx, v
 	query := `INSERT INTO email_verification (user_id, token, expires_at)
 	VALUES ($1, $2, $3)`
 
-	_, err := u.pool.Exec(ctx, query, v.UserID, v.Token, v.ExpiresAt)
+	_, err := tx.Exec(ctx, query, v.UserID, v.Token, v.ExpiresAt)
 	if err != nil {
 		return fmt.Errorf("Ошибка запроса к бд: %w", err)
 	}
@@ -58,7 +58,7 @@ func (u *UserRepository) GetVerificationByToken(ctx context.Context, token uuid.
 func (u *UserRepository) MarkEmailVerified(ctx context.Context, tx pgx.Tx, userID int) error {
 	query := `UPDATE users SET is_verified = TRUE WHERE id=$1`
 
-	_, err := u.pool.Exec(ctx, query, userID)
+	_, err := tx.Exec(ctx, query, userID)
 	if err != nil {
 		return fmt.Errorf("Ошибка обновлени пользовтаеля: %w", err)
 	}
@@ -69,7 +69,7 @@ func (u *UserRepository) MarkEmailVerified(ctx context.Context, tx pgx.Tx, userI
 func (u *UserRepository) DeleteVerificationToken(ctx context.Context, tx pgx.Tx, token uuid.UUID) error {
 	query := `DELETE FROM email_verification WHERE token=$1`
 
-	row, err := u.pool.Exec(ctx, query, token)
+	row, err := tx.Exec(ctx, query, token)
 
 	if err != nil {
 		return fmt.Errorf("ошибка БД при удалении токена: %w", err)
@@ -83,7 +83,7 @@ func (u *UserRepository) DeleteVerificationToken(ctx context.Context, tx pgx.Tx,
 }
 
 func (u *UserRepository) IsEmailVerified(ctx context.Context, userID int) (bool, error) {
-	query := `SELECT is_verified = TRUE FROM users WHERE id=$1`
+	query := `SELECT is_verified FROM users WHERE id=$1`
 
 	var ch bool
 

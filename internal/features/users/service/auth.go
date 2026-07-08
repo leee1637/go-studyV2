@@ -22,11 +22,11 @@ type AuthService struct {
 	emailService service_email.EmailService
 }
 
-func NewAuthService(repo *repository_postgres.UserRepository, secretKey string, email service_email.EmailService) *AuthService {
+func NewAuthService(repo *repository_postgres.UserRepository, secretKey string, email *service_email.EmailService) *AuthService {
 	return &AuthService{
 		repo:         repo,
 		secretKey:    []byte(secretKey),
-		emailService: email,
+		emailService: *email,
 	}
 }
 
@@ -181,6 +181,8 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, token uuid.UUID) error {
 		return fmt.Errorf("Ошибка удалния токена: %w", err)
 	}
 
+	tx.Commit(ctx)
+
 	return nil
 }
 
@@ -197,7 +199,7 @@ func (s *AuthService) SignIn(ctx context.Context, email, password string) (strin
 	}
 
 	if isVEr == false {
-		return "", "", fmt.Errorf("Почта не подтверждена: %w", err)
+		return "", "", fmt.Errorf("Почта не подтверждена")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))

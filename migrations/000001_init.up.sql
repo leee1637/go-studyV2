@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
     role VARCHAR(50) NOT NULL CHECK (role IN ('STUDENT', 'TEACHER', 'ADMIN'))
 
 
-    CONSTRAINT chk_email_format CHECK (email ~ '^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+    CONSTRAINT chk_email_format CHECK (email ~ '^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$'),
 
     CONSTRAINT chk_password_format CHECK (length(password) >= 8 AND password ~ '[a-zA-Z]' AND password ~ '[0-9]')
 );
@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS email_verification (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verification(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verification(token);
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 

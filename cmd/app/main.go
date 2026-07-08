@@ -64,7 +64,7 @@ func main() {
 	}
 	see := service_email.NewEmailConfig(emailConfig)
 	repo := repository_postgres.NewUserRepository(dbPool)
-	service := service.NewAuthService(repo, secretKey, *see)
+	service := service.NewAuthService(repo, secretKey, see)
 	hand := http_transport.NewAuthHandler(service)
 
 	studentRepo := students_postgres_repository.NewUserRepository(dbPool)
