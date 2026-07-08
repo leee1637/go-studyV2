@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
+    is_verified BOOLEAN DEFAULT FALSE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL CHECK (role IN ('STUDENT', 'TEACHER', 'ADMIN'))
 
@@ -10,7 +11,19 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT chk_password_format CHECK (length(password) >= 8 AND password ~ '[a-zA-Z]' AND password ~ '[0-9]')
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_login ON users(login);
+
+CREATE TABLE IF NOT EXISTS email_verification (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    token UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 CREATE TABLE IF NOT EXISTS students (
     id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

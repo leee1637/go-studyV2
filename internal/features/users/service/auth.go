@@ -5,24 +5,28 @@ import (
 	"errors"
 	"fmt"
 	"study/internal/core/domain"
+	service_email "study/internal/features/email/service"
 	repository_postgres "study/internal/features/users/repository/postgres"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	repo      *repository_postgres.UserRepository
-	secretKey []byte
+	repo         *repository_postgres.UserRepository
+	secretKey    []byte
+	emailService service_email.EmailService
 }
 
-func NewAuthService(repo *repository_postgres.UserRepository, secretKey string) *AuthService {
+func NewAuthService(repo *repository_postgres.UserRepository, secretKey string, email service_email.EmailService) *AuthService {
 	return &AuthService{
-		repo:      repo,
-		secretKey: []byte(secretKey),
+		repo:         repo,
+		secretKey:    []byte(secretKey),
+		emailService: email,
 	}
 }
 
@@ -136,14 +140,64 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 		return fmt.Errorf("не удалось зафиксировать транзакцию: %w", err)
 	}
 
+	token := uuid.New()
+
+	verification := domain.EmailVerification{
+		ID:        uuid.New(), // PK
+		UserID:    userID,
+		Token:     token,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	err = s.repo.SaveVerificationTokenNoTX(ctx, verification)
+	if err != nil {
+		return fmt.Errorf("Ошибка сохранения email подтверждения : %w", err)
+	}
+
+	s.emailService.SendVerificationLink(user.Email, user.FIO, token.String())
+
+	return nil
+}
+
+func (s *AuthService) ConfirmEmail(ctx context.Context, token uuid.UUID) error {
+	ver, err := s.repo.GetVerificationByToken(ctx, token)
+	if err != nil {
+		return fmt.Errorf("Ошибка поулчения токена: %w", err)
+	}
+
+	tx, err := s.repo.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("ошибка начала транзакции: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	err = s.repo.MarkEmailVerified(ctx, tx, ver.UserID)
+	if err != nil {
+		return fmt.Errorf("Ошибка подтверждения почты: %w", err)
+	}
+
+	err = s.repo.DeleteVerificationToken(ctx, tx, token)
+	if err != nil {
+		return fmt.Errorf("Ошибка удалния токена: %w", err)
+	}
+
 	return nil
 }
 
 func (s *AuthService) SignIn(ctx context.Context, email, password string) (string, string, error) {
-	// 1. Найти пользователя по логину через репозиторий
+
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
-		return "", "", errors.New("Неверный логин")
+		return "", "", errors.New("Неверный email")
+	}
+
+	isVEr, err := s.repo.IsEmailVerified(ctx, user.ID)
+	if err != nil {
+		return "", "", fmt.Errorf("Ошибка проверки почты: %w", err)
+	}
+
+	if isVEr == false {
+		return "", "", fmt.Errorf("Почта не подтверждена: %w", err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))

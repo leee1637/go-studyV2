@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"study/internal/core/middleware"
+	service_email "study/internal/features/email/service"
 	students_postgres_repository "study/internal/features/students/repository/postgres"
 	student_service "study/internal/features/students/service"
 	http_student "study/internal/features/students/transport/http"
@@ -53,8 +54,17 @@ func main() {
 		log.Fatal("SECRET_KEY не найден в .env")
 	}
 
+	emailConfig := service_email.EmailConfig{
+		Host:     "localhost",
+		Port:     1025,
+		Username: "",
+		Password: "",
+		From:     "sgty@university.ru",
+		BaseURL:  "http://localhost:8091",
+	}
+	see := service_email.NewEmailConfig(emailConfig)
 	repo := repository_postgres.NewUserRepository(dbPool)
-	service := service.NewAuthService(repo, secretKey)
+	service := service.NewAuthService(repo, secretKey, *see)
 	hand := http_transport.NewAuthHandler(service)
 
 	studentRepo := students_postgres_repository.NewUserRepository(dbPool)
@@ -67,6 +77,7 @@ func main() {
 
 	r.POST("/api/auth/register", hand.SignUp)
 	r.POST("/api/auth/login", hand.SignIn)
+	r.GET("/api/auth/verify/:token", hand.VerifyEmail)
 	r.POST("/api/auth/refresh", hand.Refresh)
 	r.POST("/api/auth/logout", hand.Logout)
 

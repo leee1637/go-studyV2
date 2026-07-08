@@ -5,6 +5,7 @@ import (
 	"study/internal/core/domain"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type SignUpInput struct {
@@ -107,4 +108,24 @@ func (a *AuthHandler) Logout(g *gin.Context) {
 	}
 
 	g.JSON(http.StatusOK, gin.H{"message": "Успешный выход"})
+}
+
+func (a *AuthHandler) VerifyEmail(g *gin.Context) {
+
+	tokenStr := g.Param("token")
+	token, err := uuid.Parse(tokenStr)
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат токена"})
+		return
+	}
+
+	err = a.authService.ConfirmEmail(g.Request.Context(), token)
+	if err != nil {
+		g.JSON(http.StatusGone, gin.H{"error": err.Error()})
+		return
+	}
+
+	g.JSON(http.StatusOK, gin.H{
+		"message": "Email успешно подтверждён! Теперь вы можете войти.",
+	})
 }
