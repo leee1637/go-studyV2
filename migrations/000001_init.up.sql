@@ -1,11 +1,11 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    login VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL CHECK (role IN ('STUDENT', 'TEACHER', 'ADMIN'))
 
 
-    CONSTRAINT chk_login_format CHECK (login ~ '^[a-zA-Z0-9]{3,}$'),
+    CONSTRAINT chk_email_format CHECK (email ~ '^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
 
     CONSTRAINT chk_password_format CHECK (length(password) >= 8 AND password ~ '[a-zA-Z]' AND password ~ '[0-9]')
 );

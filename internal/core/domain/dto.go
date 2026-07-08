@@ -2,7 +2,7 @@ package domain
 
 type SignUpDTO struct {
 	ID          int
-	Login       string
+	Email       string
 	Password    string
 	Role        Role
 	FIO         string

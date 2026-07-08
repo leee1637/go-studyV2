@@ -8,7 +8,7 @@ import (
 )
 
 type SignUpInput struct {
-	Login       string      `json:"login" binding:"required"`
+	Email       string      `json:"email" binding:"required"`
 	Password    string      `json:"password" binding:"required"`
 	Role        domain.Role `json:"role" binding:"required"`
 	FIO         string      `json:"fio" binding:"required"`
@@ -17,7 +17,7 @@ type SignUpInput struct {
 }
 
 type SignInInput struct {
-	Login    string `json:"login" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
@@ -35,7 +35,7 @@ func (a *AuthHandler) SignUp(g *gin.Context) {
 	}
 
 	dto := domain.SignUpDTO{
-		Login:       input.Login,
+		Email:       input.Email,
 		Password:    input.Password,
 		Role:        input.Role,
 		FIO:         input.FIO,
@@ -61,7 +61,7 @@ func (a *AuthHandler) SignIn(g *gin.Context) {
 		return
 	}
 
-	fastToken, refreshToken, err := a.authService.SignIn(g.Request.Context(), input.Login, input.Password)
+	fastToken, refreshToken, err := a.authService.SignIn(g.Request.Context(), input.Email, input.Password)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -14,10 +14,10 @@ func (u *UserRepository) SaveUser(ctx context.Context, tx pgx.Tx, user *domain.U
 		return 0, errors.New("user is nil")
 	}
 
-	query := `INSERT INTO users (login, password, role) VALUES ($1, $2, $3)
+	query := `INSERT INTO users (email, password, role) VALUES ($1, $2, $3)
 	RETURNING id`
 
-	err := tx.QueryRow(ctx, query, user.Login, user.Password, user.Role).Scan(&user.ID)
+	err := tx.QueryRow(ctx, query, user.Email, user.Password, user.Role).Scan(&user.ID)
 
 	if err != nil {
 		return 0, err
@@ -69,25 +69,25 @@ func (u *UserRepository) SaveUserAdmin(ctx context.Context, tx pgx.Tx, user *dom
 		return errors.New("user is nil")
 	}
 
-	query := `INSERT INTO admins (id, fio, phon_number) VALUES ($1, $2, $3)`
+	query := `INSERT INTO admins (id, fio, phone_number) VALUES ($1, $2, $3)`
 
 	_, err := tx.Exec(ctx, query, user.ID, user.FIO, user.PhoneNumber)
 
 	return err
 }
 
-func (u *UserRepository) GetByLogin(ctx context.Context, login string) (domain.SignUpDTO, error) {
-	if login == "" {
-		return domain.SignUpDTO{}, fmt.Errorf("Login can`t be empity")
+func (u *UserRepository) GetByEmail(ctx context.Context, email string) (domain.SignUpDTO, error) {
+	if email == "" {
+		return domain.SignUpDTO{}, fmt.Errorf(" email can`t be empity")
 	}
-	query := `SELECT id, login, password, role FROM users WHERE login = $1`
+	query := `SELECT id, email, password, role FROM users WHERE email = $1`
 	var user domain.SignUpDTO
 
-	err := u.pool.QueryRow(ctx, query, login).Scan(&user.ID, &user.Login, &user.Password, &user.Role)
+	err := u.pool.QueryRow(ctx, query, email).Scan(&user.ID, &user.Email, &user.Password, &user.Role)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.SignUpDTO{}, fmt.Errorf("user with login %s not found. err: %w", login, pgx.ErrNoRows)
+			return domain.SignUpDTO{}, fmt.Errorf("user with email %s not found. err: %w", email, pgx.ErrNoRows)
 		}
 		return domain.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
 	}
@@ -99,14 +99,14 @@ func (u *UserRepository) GetByID(ctx context.Context, id int) (domain.SignUpDTO,
 	if id < 0 {
 		return domain.SignUpDTO{}, fmt.Errorf("iid меньше нуля")
 	}
-	query := `SELECT id, login, password, role FROM users WHERE id = $1`
+	query := `SELECT id, email, password, role FROM users WHERE id = $1`
 	var user domain.SignUpDTO
 
-	err := u.pool.QueryRow(ctx, query, id).Scan(&user.ID, &user.Login, &user.Password, &user.Role)
+	err := u.pool.QueryRow(ctx, query, id).Scan(&user.ID, &user.Email, &user.Password, &user.Role)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.SignUpDTO{}, fmt.Errorf("user with login %s not found. err: %w", id, pgx.ErrNoRows)
+			return domain.SignUpDTO{}, fmt.Errorf("user with email %s not found. err: %w", id, pgx.ErrNoRows)
 		}
 		return domain.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
 	}

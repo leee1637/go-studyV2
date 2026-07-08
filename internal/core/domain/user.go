@@ -7,20 +7,20 @@ import (
 
 type User struct {
 	ID       int    `json:"id"`
-	Login    string `json:"login"`
+	Email    string `json:"email"`
 	Password string `json:"-"`
 	Role     Role   `json:"role"`
 }
 
 func NewUser(
 	id int,
-	login string,
+	email string,
 	password string,
 	role Role,
 ) *User {
 	return &User{
 		ID:       id,
-		Login:    login,
+		Email:    email,
 		Password: password,
 		Role:     role,
 	}

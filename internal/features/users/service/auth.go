@@ -28,7 +28,7 @@ func NewAuthService(repo *repository_postgres.UserRepository, secretKey string) 
 
 func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 
-	_, err := s.repo.GetByLogin(ctx, user.Login)
+	_, err := s.repo.GetByEmail(ctx, user.Email)
 
 	if err == nil {
 		return fmt.Errorf("Такой логин уже есть!")
@@ -72,7 +72,7 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 	}()
 
 	NewUser := domain.User{
-		Login:    user.Login,
+		Email:    user.Email,
 		Password: string(hashedPassword),
 		Role:     user.Role,
 	}
@@ -139,9 +139,9 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 	return nil
 }
 
-func (s *AuthService) SignIn(ctx context.Context, login, password string) (string, string, error) {
+func (s *AuthService) SignIn(ctx context.Context, email, password string) (string, string, error) {
 	// 1. Найти пользователя по логину через репозиторий
-	user, err := s.repo.GetByLogin(ctx, login)
+	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return "", "", errors.New("Неверный логин")
 	}
@@ -154,7 +154,7 @@ func (s *AuthService) SignIn(ctx context.Context, login, password string) (strin
 
 	fastToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"login":   user.Login,
+		"email":   user.Email,
 		"role":    user.Role,
 		"type":    "fast",
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // 24 часа
@@ -229,7 +229,7 @@ func (s *AuthService) Refresh(ctx context.Context, refreshToken string) (string,
 
 	fastAccess := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
-		"login":   user.Login,
+		"email":   user.Email,
 		"role":    user.Role,
 		"type":    "fast",
 		"exp":     time.Now().Add(24 * time.Hour).Unix(),
