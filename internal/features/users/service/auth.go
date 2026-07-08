@@ -169,7 +169,11 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, token uuid.UUID) error {
 	if err != nil {
 		return fmt.Errorf("ошибка начала транзакции: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		}
+	}()
 
 	err = s.repo.MarkEmailVerified(ctx, tx, ver.UserID)
 	if err != nil {
@@ -181,7 +185,10 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, token uuid.UUID) error {
 		return fmt.Errorf("Ошибка удалния токена: %w", err)
 	}
 
-	tx.Commit(ctx)
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("ошибка коммита: %w", err)
+	}
+	return nil
 
 	return nil
 }
