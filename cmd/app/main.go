@@ -7,6 +7,8 @@ import (
 	"os"
 	"study/internal/core/middleware"
 	service_email "study/internal/features/email/service"
+	registration_repository "study/internal/features/registration/repository"
+	registration_service "study/internal/features/registration/service"
 	students_postgres_repository "study/internal/features/students/repository/postgres"
 	student_service "study/internal/features/students/service"
 	http_student "study/internal/features/students/transport/http"
@@ -65,7 +67,11 @@ func main() {
 	see := service_email.NewEmailConfig(emailConfig)
 	repo := repository_postgres.NewUserRepository(dbPool)
 	service := service.NewAuthService(repo, secretKey, see)
-	hand := http_transport.NewAuthHandler(service)
+
+	regRepo := registration_repository.NewRegistrationRepository(dbPool)
+	regService := registration_service.NewRegistrationService(regRepo, repo, see)
+
+	hand := http_transport.NewAuthHandler(service, regService)
 
 	studentRepo := students_postgres_repository.NewUserRepository(dbPool)
 	studentService := student_service.NewStudentService(studentRepo, secretKey)
@@ -78,17 +84,20 @@ func main() {
 	r.POST("/api/auth/register", hand.SignUp)
 	r.POST("/api/auth/login", hand.SignIn)
 	r.GET("/api/auth/verify/:token", hand.VerifyEmail)
+	r.GET("/api/auth/verify-csv/:token", hand.VerifyCSVRegistration)
+	r.POST("/api/auth/verify-csv/:token", hand.CompleteCSVRegistration)
 	r.POST("/api/auth/refresh", hand.Refresh)
 	r.POST("/api/auth/logout", hand.Logout)
+
+	r.POST("/api/admin/registration/upload",
+		middleware.AuthMiddleware(secretKey),
+		middleware.RequireRole("ADMIN"),
+		hand.UploadCSV)
 
 	api := r.Group("/api")
 
 	api.Use(middleware.AuthMiddleware(secretKey))
 	{
-
-		api.GET("/admin/panel", middleware.RequireRole("ADMIN"), func(c *gin.Context) {
-			c.JSON(200, gin.H{"message": "Добро пожаловать, Админ!"})
-		})
 
 		api.GET("/groups", middleware.RequireRole("ADMIN", "TEACHER"), func(c *gin.Context) {
 

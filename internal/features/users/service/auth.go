@@ -189,8 +189,6 @@ func (s *AuthService) ConfirmEmail(ctx context.Context, token uuid.UUID) error {
 		return fmt.Errorf("ошибка коммита: %w", err)
 	}
 	return nil
-
-	return nil
 }
 
 func (s *AuthService) SignIn(ctx context.Context, email, password string) (string, string, error) {

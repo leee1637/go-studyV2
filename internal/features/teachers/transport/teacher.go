@@ -178,7 +178,7 @@ func (t *TeacherHandler) DeleteGroup(g *gin.Context) {
 		return
 	}
 
-	err := t.TeacherService.DeleteGroup(g.Request.Context(), teacherGroup, domain.Role(role.(string)))
+	err := t.TeacherService.DeleteGroup(g.Request.Context(), id.(int),  teacherGroup, domain.Role(role.(string)))
 	if err != nil {
 		g.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return

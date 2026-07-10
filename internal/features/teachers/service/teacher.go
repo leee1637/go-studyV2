@@ -148,10 +148,10 @@ func (s *TeacherService) AddGroup(ctx context.Context, idResp int, group string,
 	}
 }
 
-func (s *TeacherService) DeleteGroup(ctx context.Context, group string, role domain.Role) error {
+func (s *TeacherService) DeleteGroup(ctx context.Context, idResp int, group string, role domain.Role) error {
 	switch role {
 	case domain.RoleAdmin:
-		err := s.repo.DeleteGroup(ctx, group)
+		err := s.repo.DeleteGroup(ctx, idResp, group)
 		if err != nil {
 			return fmt.Errorf("Ошибка запроса: %w", err)
 		}

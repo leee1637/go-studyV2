@@ -1,2 +1,3 @@
 DROP TABLE IF EXISTS admins CASCADE;
 DROP TABLE IF EXISTS refresh_tokens CASCADE;
+DROP TABLE IF EXISTS registration_requests CASCADE;
