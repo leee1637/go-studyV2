@@ -32,7 +32,7 @@ func main() {
 
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
-		dsn = "postgres://test:123@127.0.0.1:5534/test_db?sslmode=disable"
+		dsn = "postgres://test1:123@127.0.0.1:5534/test_db?sslmode=disable"
 	}
 	fmt.Println("DEBUG DSN:", dsn)
 

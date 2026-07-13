@@ -11,7 +11,6 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,10 +35,6 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 
 	if err == nil {
 		return fmt.Errorf("Такой логин уже есть!")
-	}
-
-	if !errors.Is(err, pgx.ErrNoRows) {
-		return fmt.Errorf("ошибка проверки логина: %w", err)
 	}
 
 	if len(user.Password) < 8 {
@@ -110,10 +105,15 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 
 	case domain.RoleTeacher:
 
+		var phone string
+		if user.PhoneNumber != nil {
+			phone = *user.PhoneNumber
+		}
+
 		newTeacher := domain.Teacher{
 			ID:          userID,
 			FIO:         user.FIO,
-			PhoneNumber: *user.PhoneNumber,
+			PhoneNumber: phone,
 			GroupName:   user.GroupName,
 		}
 
@@ -154,7 +154,9 @@ func (s *AuthService) SignUp(ctx context.Context, user domain.SignUpDTO) error {
 		return fmt.Errorf("Ошибка сохранения email подтверждения : %w", err)
 	}
 
-	s.emailService.SendVerificationLink(user.Email, user.FIO, token.String())
+	if err := s.emailService.SendVerificationLink(user.Email, user.FIO, token.String()); err != nil {
+		fmt.Printf("ошибка отправки email для %s: %v\n", user.Email, err)
+	}
 
 	return nil
 }

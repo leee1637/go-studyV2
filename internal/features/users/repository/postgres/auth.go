@@ -106,7 +106,7 @@ func (u *UserRepository) GetByID(ctx context.Context, id int) (domain.SignUpDTO,
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return domain.SignUpDTO{}, fmt.Errorf("user with email %s not found. err: %w", id, pgx.ErrNoRows)
+			return domain.SignUpDTO{}, fmt.Errorf("user with id %d not found. err: %w", id, pgx.ErrNoRows)
 		}
 		return domain.SignUpDTO{}, fmt.Errorf("failed to get user: %w", err)
 	}

@@ -57,13 +57,15 @@ func (s *TeacherService) GetByID(ctx context.Context, idReq, idResp int, role do
 
 }
 
-func (s *TeacherService) UpdateTeacher(ctx context.Context, idReq, idResp int, role domain.Role, newTec domain.UpdateTeachertDTO) error {
+func (s *TeacherService) UpdateTeacher(ctx context.Context, idReq, idResp int, role domain.Role, newTec domain.UpdateTeacherDTO) error {
 	tec, err := s.repo.GetByID(ctx, idResp)
 	if err != nil {
 		return fmt.Errorf("Ошибка поиска пользователя: %w", err)
 	}
 	tec.FIO = newTec.FIO
-	tec.PhoneNumber = *newTec.PhoneNumber
+	if newTec.PhoneNumber != nil {
+		tec.PhoneNumber = *newTec.PhoneNumber
+	}
 
 	switch role {
 	case domain.RoleAdmin:
@@ -148,9 +150,19 @@ func (s *TeacherService) AddGroup(ctx context.Context, idResp int, group string,
 	}
 }
 
-func (s *TeacherService) DeleteGroup(ctx context.Context, idResp int, group string, role domain.Role) error {
+func (s *TeacherService) DeleteGroup(ctx context.Context, idReq, idResp int, group string, role domain.Role) error {
 	switch role {
 	case domain.RoleAdmin:
+		err := s.repo.DeleteGroup(ctx, idResp, group)
+		if err != nil {
+			return fmt.Errorf("Ошибка запроса: %w", err)
+		}
+
+		return nil
+	case domain.RoleTeacher:
+		if idReq != idResp {
+			return fmt.Errorf("Нет прав для удаления группы")
+		}
 		err := s.repo.DeleteGroup(ctx, idResp, group)
 		if err != nil {
 			return fmt.Errorf("Ошибка запроса: %w", err)

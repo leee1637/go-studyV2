@@ -27,3 +27,9 @@ services:
     depends_on:
       study-postgres:
         condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"

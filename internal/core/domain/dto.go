@@ -16,7 +16,7 @@ type UpdateStudentDTO struct {
 	PhoneNumber *string `json:"phone_number"`
 }
 
-type UpdateTeachertDTO struct {
+type UpdateTeacherDTO struct {
 	FIO         string  `json:"fio"`
 	PhoneNumber *string `json:"phone_number"`
 }

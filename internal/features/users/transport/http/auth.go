@@ -25,7 +25,7 @@ type SignInInput struct {
 }
 
 type RefreshInput struct {
-	RefreshInput string `json:"refresh_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (a *AuthHandler) SignUp(g *gin.Context) {
@@ -66,7 +66,7 @@ func (a *AuthHandler) SignIn(g *gin.Context) {
 
 	fastToken, refreshToken, err := a.authService.SignIn(g.Request.Context(), input.Email, input.Password)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -84,9 +84,9 @@ func (a *AuthHandler) Refresh(g *gin.Context) {
 		return
 	}
 
-	fastToken, refreshToken, err := a.authService.Refresh(g.Request.Context(), r.RefreshInput)
+	fastToken, refreshToken, err := a.authService.Refresh(g.Request.Context(), r.RefreshToken)
 	if err != nil {
-		g.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка парса токенов"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -103,7 +103,7 @@ func (a *AuthHandler) Logout(g *gin.Context) {
 		return
 	}
 
-	err := a.authService.Logout(g.Request.Context(), input.RefreshInput)
+	err := a.authService.Logout(g.Request.Context(), input.RefreshToken)
 	if err != nil {
 		g.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

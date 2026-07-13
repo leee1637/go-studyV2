@@ -19,7 +19,7 @@ func (t *TeacherHandler) GetAll(g *gin.Context) {
 		limit = 20
 	}
 	if limit > 100 {
-		limit = 20
+		limit = 100
 	}
 
 	result, err := t.TeacherService.GetAll(g.Request.Context(), page, limit)
@@ -34,7 +34,7 @@ func (t *TeacherHandler) GetAll(g *gin.Context) {
 func (t *TeacherHandler) GetByID(g *gin.Context) {
 	idReq, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
@@ -58,7 +58,7 @@ func (t *TeacherHandler) GetByID(g *gin.Context) {
 func (t *TeacherHandler) UpdateTeacher(g *gin.Context) {
 	idReq, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
@@ -70,7 +70,7 @@ func (t *TeacherHandler) UpdateTeacher(g *gin.Context) {
 		return
 	}
 
-	var input domain.UpdateTeachertDTO
+	var input domain.UpdateTeacherDTO
 	if err := g.ShouldBindJSON(&input); err != nil {
 		g.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат данных"})
 		return
@@ -88,7 +88,7 @@ func (t *TeacherHandler) UpdateTeacher(g *gin.Context) {
 func (t *TeacherHandler) DeleteTeacher(g *gin.Context) {
 	idReq, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
@@ -112,7 +112,7 @@ func (t *TeacherHandler) DeleteTeacher(g *gin.Context) {
 func (t *TeacherHandler) GetByGroup(g *gin.Context) {
 	idReq, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
@@ -136,7 +136,7 @@ func (t *TeacherHandler) GetByGroup(g *gin.Context) {
 func (t *TeacherHandler) AddGroup(g *gin.Context) {
 	_, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
@@ -164,13 +164,19 @@ func (t *TeacherHandler) AddGroup(g *gin.Context) {
 }
 
 func (t *TeacherHandler) DeleteGroup(g *gin.Context) {
-	id, exists := g.Get("userID")
+	idReq, exists := g.Get("userID")
 	if !exists {
-		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизоан"})
+		g.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизован"})
 		return
 	}
 
 	role, _ := g.Get("role")
+
+	teacherID, err := strconv.Atoi(g.Param("id"))
+	if err != nil {
+		g.JSON(http.StatusBadRequest, gin.H{"error": "Неверный id"})
+		return
+	}
 
 	teacherGroup := g.Param("group")
 	if teacherGroup == "" {
@@ -178,7 +184,7 @@ func (t *TeacherHandler) DeleteGroup(g *gin.Context) {
 		return
 	}
 
-	err := t.TeacherService.DeleteGroup(g.Request.Context(), id.(int),  teacherGroup, domain.Role(role.(string)))
+	err = t.TeacherService.DeleteGroup(g.Request.Context(), idReq.(int), teacherID, teacherGroup, domain.Role(role.(string)))
 	if err != nil {
 		g.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return

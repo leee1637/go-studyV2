@@ -47,8 +47,20 @@ func AuthMiddleware(secretKey string) gin.HandlerFunc {
 			return
 		}
 
-		g.Set("userID", int(claims["user_id"].(float64)))
-		g.Set("role", claims["role"].(string))
+		userID, ok := claims["user_id"].(float64)
+		if !ok {
+			g.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Невалидный user_id в токене"})
+			return
+		}
+
+		role, ok := claims["role"].(string)
+		if !ok {
+			g.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Невалидная роль в токене"})
+			return
+		}
+
+		g.Set("userID", int(userID))
+		g.Set("role", role)
 
 		g.Next()
 	}

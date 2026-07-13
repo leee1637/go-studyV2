@@ -119,6 +119,7 @@ func (t *TeacherRepository) GetByGroup(ctx context.Context, group string) ([]dom
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка запроса: %w", err)
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var tt domain.Teacher

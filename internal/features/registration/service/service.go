@@ -171,6 +171,13 @@ func (s *RegistrationService) validateRow(row []string, rowNum int, headers map[
 		return nil, &domain.WarningRow{Row: rowNum, Reason: "Email не может быть пустым"}
 	}
 
+	if len(group) > 30 {
+		return nil, &domain.WarningRow{Row: rowNum, Reason: "Название группы длиннее 30 символов"}
+	}
+	if len(phone) > 50 {
+		return nil, &domain.WarningRow{Row: rowNum, Reason: "Номер телефона длиннее 50 символов"}
+	}
+
 	if !isValidEmail(email) {
 		return nil, &domain.WarningRow{Row: rowNum, Reason: fmt.Sprintf("Невалидный email: '%s'", email)}
 	}
@@ -287,10 +294,15 @@ func (s *RegistrationService) CompleteRegistration(ctx context.Context, token uu
 		}
 
 	case domain.RoleTeacher:
+		var phone string
+		if req.PhoneNumber != nil {
+			phone = *req.PhoneNumber
+		}
+
 		teacher := &domain.Teacher{
 			ID:          userID,
 			FIO:         req.FIO,
-			PhoneNumber: "",
+			PhoneNumber: phone,
 		}
 		err = s.userRepo.SaveUserTeacher(ctx, tx, teacher)
 		if err != nil {
