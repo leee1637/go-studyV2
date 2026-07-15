@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"study/internal/core/domain"
-	email_service "study/internal/features/email/service"
+	"study/internal/features/email/dispatcher"
 	"study/internal/features/registration/repository"
 	user_repository "study/internal/features/users/repository/postgres"
 	"time"
@@ -18,13 +18,13 @@ import (
 )
 
 type RegistrationService struct {
-	regRepo      *repository.RegistrationRepository
-	userRepo     *user_repository.UserRepository
-	emailService *email_service.EmailService
+	regRepo    *repository.RegistrationRepository
+	userRepo   *user_repository.UserRepository
+	dispatcher dispatcher.EmailDispatcher
 }
 
-func NewRegistrationService(regRepo *repository.RegistrationRepository, userRepo *user_repository.UserRepository, email *email_service.EmailService) *RegistrationService {
-	return &RegistrationService{regRepo: regRepo, userRepo: userRepo, emailService: email}
+func NewRegistrationService(regRepo *repository.RegistrationRepository, userRepo *user_repository.UserRepository, email dispatcher.EmailDispatcher) *RegistrationService {
+	return &RegistrationService{regRepo: regRepo, userRepo: userRepo, dispatcher: email}
 }
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
@@ -131,7 +131,7 @@ func (s *RegistrationService) ProcessCSV(ctx context.Context, file []byte) (*dom
 		}
 
 		for _, req := range validRequests {
-			err := s.emailService.SendVerificationLink(req.Email, req.FIO, req.Token.String())
+			err := s.dispatcher.Send(req.Email, req.FIO, req.Token.String())
 			if err != nil {
 				fmt.Printf("ошибка отправки email для %s: %v\n", req.Email, err)
 			}

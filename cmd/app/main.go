@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"study/internal/core/middleware"
+	"study/internal/features/email/dispatcher"
 	service_email "study/internal/features/email/service"
 	registration_repository "study/internal/features/registration/repository"
 	registration_service "study/internal/features/registration/service"
@@ -65,11 +66,20 @@ func main() {
 		BaseURL:  "http://localhost:8091",
 	}
 	see := service_email.NewEmailConfig(emailConfig)
+	// dispatcherLocal := dispatcher.NewDirectDispatcher(see)
+
+	err = dispatcher.EnsureTopic("localhost:9092", "email-sending")
+	if err != nil {
+		log.Fatal("Ошибка создания топика:", err)
+	}
+
+	dispKafka := dispatcher.NewKafkaDispatcher("localhost:9092", "email-sending")
+
 	repo := repository_postgres.NewUserRepository(dbPool)
 	service := service.NewAuthService(repo, secretKey, see)
 
 	regRepo := registration_repository.NewRegistrationRepository(dbPool)
-	regService := registration_service.NewRegistrationService(regRepo, repo, see)
+	regService := registration_service.NewRegistrationService(regRepo, repo, dispKafka)
 
 	hand := http_transport.NewAuthHandler(service, regService)
 
